@@ -8,9 +8,10 @@ const PROJECT_CHOICES = [
     { name: 'Killer Ink', value: 'killer-ink' },
     { name: 'Utility Design', value: 'utility-design' }
 ]
+
 const TASK_STATUES = [
     {
-        name: '🟢 Complete',
+        name: '🟢 Completed',
         value: 'complete',
     },
     {
@@ -22,43 +23,59 @@ const TASK_STATUES = [
         value: 'failed',
     },
 ]
-const getProjectNameFromValue = value => PROJECT_CHOICES.find(p => p.value === value).name
+
+const TODAY_KEY = 'today'
+const YESTERDAY_KEY = 'yesterday'
+const MESSAGES = {
+    [YESTERDAY_KEY]: 'What projects you work on yesterday?',
+    [TODAY_KEY]: 'What project are you working on today?'
+}
+
+const getNameFromValue = (choices, value) => choices.find(p => p.value === value).name
 
 async function getTask(projectName, blockers) {
-    const taskDescription = await input({ required: true, message: `Please describe the task that you worked on (${projectName})` })
+    const taskDescription = await input({ required: true, message: `Please describe the task (${projectName})` })
     const taskUrl = await input({ message: `Please provide the MiesterTask url (not required)` })
     const taskStatus = await select({
         message: 'What is the status of the task',
         choices: TASK_STATUES,
     })
+    const task = { taskDescription, taskUrl, taskStatus }
 
     if (taskStatus === 'in-progress' || taskStatus === 'failed') {
-        const isBlocked = await confirm({ message: 'Is this task blocked (y/N)'});
+        const isBlocked = await confirm({ message: 'Is this task blocked (y/N)' });
         if (isBlocked) {
-            const blocker = await input({ message: 'Why is it blocked?'})
-            blockers.push(blocker)
+            const blocked = await input({ message: 'Why is it blocked?' })
+            blockers.push({ ...task, blocked })
         }
     }
 
-    const shouldContinue = await confirm({ message: `Did you work on another task for ${projectName}?` });
+    const shouldContinue = await confirm({ message: `Are there other tasks for ${projectName}?` });
     if (shouldContinue) {
         const tasks = await getTask(projectName, blockers)
-        tasks.unshift({taskDescription, taskUrl, taskStatus})
+        tasks.unshift(task)
         return tasks
     } else {
-        return [{taskDescription, taskUrl, taskStatus}]
+        return [task]
     }
 }
 
-const projects = await checkbox({
-    message: 'What projects have you worked on today?',
-    required: true,
-    choices: PROJECT_CHOICES
-})
+async function getDay(dayType) {
+    const message = MESSAGES[dayType]
+    const config = { dayType }
+    const blockers = []
+    const projects = await checkbox({
+        message,
+        required: true,
+        choices: PROJECT_CHOICES
+    })
 
-const config = {}
-const blockers = []
-for (const projectValue of projects) {
-    config[projectValue] = await getTask(getProjectNameFromValue(projectValue), blockers)
+    for (const projectValue of projects) {
+        config[projectValue] = await getTask(getNameFromValue(PROJECT_CHOICES, projectValue), blockers)
+    }
+
+    return config
 }
+
+console.log(await getDay(YESTERDAY_KEY))
 
