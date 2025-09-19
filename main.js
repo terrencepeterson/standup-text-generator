@@ -24,25 +24,27 @@ const TASK_STATUES = [
     },
 ]
 
-const TODAY_KEY = 'today'
-const YESTERDAY_KEY = 'yesterday'
-const MESSAGES = {
-    [YESTERDAY_KEY]: 'What projects you work on yesterday?',
-    [TODAY_KEY]: 'What project are you working on today?'
-}
+const MESSAGES = [
+    'What projects did you work on yesterday?',
+    'What projects are you working on today?'
+]
 
 const getNameFromValue = (choices, value) => choices.find(p => p.value === value).name
+const getBoldText = text => `*${text}*`
+const getTaskLink = url => `([Task](${url}))`
 
-async function getTask(projectName, blockers) {
-    const taskDescription = await input({ required: true, message: `Please describe the task (${projectName})` })
-    const taskUrl = await input({ message: `Please provide the MiesterTask url (not required)` })
-    const taskStatus = await select({
-        message: 'What is the status of the task',
-        choices: TASK_STATUES,
-    })
-    const task = { taskDescription, taskUrl, taskStatus }
+async function getTaskConfig(projectName, blockers, shouldGetStatus) {
+    const task = {}
+    task.taskDescription = await input({ required: true, message: `Please describe the task (${projectName})` })
+    task.taskUrl = await input({ message: `Please provide the MiesterTask url (not required)` })
+    if (shouldGetStatus) {
+        task.taskStatus = await select({
+            message: 'What is the status of the task',
+            choices: TASK_STATUES,
+        })
+    }
 
-    if (taskStatus === 'in-progress' || taskStatus === 'failed') {
+    if (Object.hasOwn(task, 'taskStatus') && task.taskStatus === TASK_STATUES[1].value || task.taskStatus === TASK_STATUES[2].value) {
         const isBlocked = await confirm({ message: 'Is this task blocked (y/N)' });
         if (isBlocked) {
             const blocked = await input({ message: 'Why is it blocked?' })
@@ -52,7 +54,7 @@ async function getTask(projectName, blockers) {
 
     const shouldContinue = await confirm({ message: `Are there other tasks for ${projectName}?` });
     if (shouldContinue) {
-        const tasks = await getTask(projectName, blockers)
+        const tasks = await getTaskConfig(projectName, blockers, shouldGetStatus)
         tasks.unshift(task)
         return tasks
     } else {
@@ -60,10 +62,8 @@ async function getTask(projectName, blockers) {
     }
 }
 
-async function getDay(dayType) {
-    const message = MESSAGES[dayType]
-    const config = { dayType }
-    const blockers = []
+async function getDayConfig(message, shouldGetStatus, blockers) {
+    const config = { message, projects: {} }
     const projects = await checkbox({
         message,
         required: true,
@@ -71,11 +71,59 @@ async function getDay(dayType) {
     })
 
     for (const projectValue of projects) {
-        config[projectValue] = await getTask(getNameFromValue(PROJECT_CHOICES, projectValue), blockers)
+        config.projects[projectValue] = await getTaskConfig(getNameFromValue(PROJECT_CHOICES, projectValue), blockers, shouldGetStatus)
     }
 
     return config
 }
 
-console.log(await getDay(YESTERDAY_KEY))
+function getProjectOutput(projectValue, tasks) {
+    let projectOutput = getBoldText(getNameFromValue(PROJECT_CHOICES, projectValue))
+    const hasStatus = tasks.some(t => Object.hasOwn(t, 'taskStatus'))
+    const getTasksText = (taskOutput, tasks, isTabbed) =>
+        tasks.reduce((acum, task) =>
+            acum += `\n${isTabbed ? '\t' : ''} - ${task.taskDescription} ${task.taskUrl ? getTaskLink(task.taskUrl) : ''}`
+        , taskOutput)
+
+    if (!hasStatus) {
+        return getTasksText(projectOutput, tasks) += '\n'
+    }
+
+    const statusSortedTasks = {}
+    for (const task of tasks) {
+        if (Object.hasOwn(statusSortedTasks, task.taskStatus)) {
+            statusSortedTasks[task.taskStatus].push(task)
+        } else {
+            statusSortedTasks[task.taskStatus] = [task]
+        }
+    }
+
+    for (const [taskStatusValue, tasks] of Object.entries(statusSortedTasks)) {
+        projectOutput += `\n${getNameFromValue(TASK_STATUES, taskStatusValue)}`
+        projectOutput = getTasksText(projectOutput, tasks, true)
+    }
+
+    return projectOutput += '\n'
+}
+
+function getDayOutput(config) {
+    let output = config.message + '\n'
+
+    for (const [projectValue, tasks] of Object.entries(config.projects)) {
+        output += getProjectOutput(projectValue, tasks)
+    }
+
+    return output += '\n\n'
+}
+
+async function getStandupText(days) {
+    let output = ''
+    const blockers = []
+    for (const [i, day] of days.entries()) {
+        const config = await getDayConfig(day, i === 0, blockers) // only ask for the status on the first one
+        output += getDayOutput(config)
+    }
+}
+
+getStandupText(MESSAGES)
 
