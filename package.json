@@ -2,9 +2,11 @@
   "name": "standup-generator",
   "version": "1.0.0",
   "main": "main.mjs",
+  "bin": {
+    "generate-standup": "./main.mjs"
+  },
   "type": "module",
   "scripts": {
-    "get": "node main.mjs"
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

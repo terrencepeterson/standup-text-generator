@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { MESSAGES } from './config.mjs'
 import { getDayConfig } from './scripts/config.mjs'
 import { getDayOutput, getBlockersOutput } from './scripts/output.mjs'
