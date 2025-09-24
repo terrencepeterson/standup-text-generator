@@ -1,5 +1,5 @@
 import { TASK_STATUES } from '../config.mjs'
-import { getNameFromValue } from './helpers.mjs'
+import { getNameFromValue, isValidUrl } from './helpers.mjs'
 import { checkbox } from '@inquirer/prompts'
 import { confirm } from '@inquirer/prompts'
 import { input } from '@inquirer/prompts'
@@ -9,8 +9,9 @@ import PROJECT_CHOICES from '../projects.mjs'
 async function getTaskConfig(projectName, blockers, shouldGetStatus) {
     const task = {}
     task.taskDescription = await input({ required: true, message: `Please describe the task (${projectName})` })
-    task.taskUrl = await input({ 
-        message: `Please provide the MiesterTask url (not required)`
+    task.taskUrl = await input({
+        message: `Please provide the MiesterTask url (not required)`,
+        validate: (url) => url === "" || isValidUrl(url)
     })
     if (shouldGetStatus) {
         task.taskStatus = await select({
