@@ -17,7 +17,7 @@ async function getTaskConfig(projectName, blockers, shouldGetStatus) {
     }
 
     if (Object.hasOwn(task, 'taskStatus') && task.taskStatus === TASK_STATUES[1].value || task.taskStatus === TASK_STATUES[2].value) {
-        const isBlocked = await confirm({ message: 'Is this task blocked (y/N)' });
+        const isBlocked = await confirm({ message: 'Is this task blocked', default: false });
         if (isBlocked) {
             const blocked = await input({ message: 'Why is it blocked?' })
             blockers.push({ ...task, blocked })
