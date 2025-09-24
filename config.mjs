@@ -1,9 +1,3 @@
-export const PROJECT_CHOICES = [
-    { name: 'Police Supplies', value: 'police-supplies' },
-    { name: 'Killer Ink', value: 'killer-ink' },
-    { name: 'Utility Design', value: 'utility-design' }
-]
-
 export const TASK_STATUES = [
     {
         name: '🟢 Completed',

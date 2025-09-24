@@ -1,4 +1,5 @@
-import { PROJECT_CHOICES, TASK_STATUES } from "../config.mjs"
+import { TASK_STATUES } from "../config.mjs"
+import PROJECT_CHOICES from '../projects.mjs'
 import { getNameFromValue, getOrderFromValue, getTasksText, getBoldText } from "./helpers.mjs"
 
 function getProjectOutput(projectValue, tasks) {
