@@ -1,5 +1,6 @@
 import PROJECT_CHOICES from '../projects.mjs'
 import { getNameFromValue, getTasksText, getBoldText } from "./helpers.mjs"
+import { OUTPUT_MESSAGES } from '../config.mjs'
 
 function getProjectOutput(projectValue, tasks) {
     let projectOutput = getBoldText(getNameFromValue(PROJECT_CHOICES, projectValue))
@@ -7,7 +8,8 @@ function getProjectOutput(projectValue, tasks) {
 }
 
 export function getDayOutput(config) {
-    let output = config.message + '\n'
+    // convert to output message here
+    let output = OUTPUT_MESSAGES[config.message] + '\n'
 
     for (const [projectValue, tasks] of Object.entries(config.projects)) {
         output += getProjectOutput(projectValue, tasks)
