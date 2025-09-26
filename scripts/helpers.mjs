@@ -8,7 +8,7 @@ export const getTaskLink = url => ` ([Task](${url}))`
 
 export const getTasksText = (taskOutput, tasks, isBlocked) =>
     tasks.reduce((acum, task) =>
-        acum += `\n${task.taskStatus && !isBlocked ? getNameFromValue(TASK_STATUES, task.taskStatus) : ''} - ${task.taskDescription}${task.taskUrl ? getTaskLink(task.taskUrl) : ''}${isBlocked ? ': ' + task.blocked : ''}`
+        acum += `\n${task.taskStatus && !isBlocked ? getNameFromValue(TASK_STATUES, task.taskStatus) : ''} - ${capatiliseFirstWord(task.taskDescription)}${task.taskUrl ? getTaskLink(task.taskUrl) : ''}${isBlocked ? ': ' + task.blocked : ''}`
     , taskOutput)
 
 export const getOrderFromValue = val => TASK_STATUES.find(ts => ts.value === val).order
@@ -21,3 +21,6 @@ export const isValidUrl = (url) => {
         return false
     }
 }
+
+const capatiliseFirstWord = (string) => string[0].toUpperCase() + string.substring(1, string.length)
+

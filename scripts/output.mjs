@@ -4,7 +4,7 @@ import { OUTPUT_MESSAGES } from '../config.mjs'
 
 function getProjectOutput(projectValue, tasks) {
     let projectOutput = getBoldText(getNameFromValue(PROJECT_CHOICES, projectValue))
-    return getTasksText(projectOutput, tasks) + '\n'
+    return getTasksText(projectOutput, tasks) + '\n\n'
 }
 
 export function getDayOutput(config) {
@@ -15,7 +15,7 @@ export function getDayOutput(config) {
         output += getProjectOutput(projectValue, tasks)
     }
 
-    return output += '\n'
+    return output += '\n\n'
 }
 
 export function getBlockersOutput(blockers) {
